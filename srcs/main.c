@@ -10,6 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#define __USE_XOPEN_EXTENDED
+#include "/usr/include/stdlib.h"
+#include <fcntl.h>
 #include "ft_script.h"
 
 void	help_exit(void **ptr_opt)
@@ -24,52 +29,66 @@ void	help_exit(void **ptr_opt)
 	ft_putstr("\t-e            return exit code of the child process\n");
 	ft_putstr("\t-q            be quiet\n");
 	ft_putstr("\t-h            display this help\n\n");
+	_exit(0);
 }
 
-void	get_opt(int ac, char **av, void **ptr_opt)
+void	get_opt(int ac, char **av, void **ptr_script)
 {
-	t_opt	*opt;
+	t_script	*script;
 	int i;
 
-	opt = *ptr_opt;
+	script = *ptr_script;
 	i = 1;
 	while (i < ac)
 	{
 		if (!ft_strcmp(av[i], "-a"))
-			opt->a = 1;
+			script->options = script->options | OPT_A;
 		else if (!ft_strcmp(av[i], "-c") && i + 1 < ac)
 		{
-			opt->c = 1;
-			opt->cmd = av[++i];
+			script->options = script->options | OPT_C;
+			script->cmd = av[++i];
 		}
 		else if (!ft_strcmp(av[i], "-e"))
-			opt->e = 1;
+			script->options = script->options | OPT_E;
 		else if (!ft_strcmp(av[i], "-q"))
-			opt->q = 1;
+			script->options = script->options | OPT_Q;
 		else if (!ft_strcmp(av[i], "-h"))
-			help_exit(ptr_opt);
+			help_exit(ptr_script);
 		else
 		{
-			opt->filename = av[i];
+			script->filename = av[i];
 			return ;
 		}
 		i++;
 	}
 }
 
-int		main(int ac, char **av)
+void	open_ptmx(t_script *script)
 {
-	t_opt	*opt;
+	char	*pts_name;
 
-	if (!(opt = (t_opt*)malloc(sizeof(t_opt))))
+	if ((script->fds[MASTER] = open("/dev/ptmx", O_RDWR)) < 0)
+		ft_exiterror("Can not open /dev/ptmx", 1);
+	if (grantpt(script->fds[MASTER]) < 0)			// FORBIDEN
+		ft_exiterror("Can not grant pts", 1);
+	if (unlockpt(script->fds[MASTER]) < 0)			// FORBIDEN
+		ft_exiterror("Can not unlock pts", 1);
+	if (!(pts_name = ptsname(script->fds[MASTER])))	// FORBIDEN
+		ft_exiterror("Can not get pts name", 1);
+	if ((script->fds[SLAVE] = open(pts_name, O_RDWR)) < 0)
+		ft_exiterror("Can not open slave fd", 1);
+}
+	
+int		main(int ac, char **av, char **env)
+{
+	t_script	*script;
+
+	if (!(script = (t_script*)malloc(sizeof(t_script))))
 		ft_exiterror("Malloc failed", 1);
-	opt->a = 0;
-	opt->c = 0;
-	opt->cmd = NULL;
-	opt->e = 0;
-	opt->q = 0;
-	opt->h = 0;
-	opt->filename = NULL;
-	get_opt(ac, av, (void*)&opt);
-	// execute <--- TODO
+	script->options = 0;
+	script->cmd = NULL;
+	script->filename = NULL;
+	get_opt(ac, av, (void*)&script);
+	open_ptmx(script);
+	manage(script, env);
 }

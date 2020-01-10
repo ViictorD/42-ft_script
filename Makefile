@@ -24,7 +24,9 @@ DIR_LIB = ./libft/
 
 SRC_DIR = ./srcs/
 
-FILES = main.c
+FILES = main.c \
+		core.c \
+		utils.c
 
 SRCS = $(addprefix $(SRC_DIR), $(FILES))
 

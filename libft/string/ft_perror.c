@@ -6,7 +6,7 @@
 /*   By: vdarmaya <vdarmaya@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/05/27 12:32:57 by bdurst            #+#    #+#             */
-/*   Updated: 2020/01/04 17:18:31 by vdarmaya         ###   ########.fr       */
+/*   Updated: 2020/01/10 20:15:57 by vdarmaya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,5 +16,5 @@
 void	ft_perror(const char *str, int status)
 {
 	perror(str);
-	exit(status);
+	_exit(status);
 }
