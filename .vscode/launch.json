@@ -24,7 +24,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/ft_script",
-			"args": ["-c", "echo test"],
+			"args": ["-e"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],
