@@ -6,7 +6,7 @@
 /*   By: vdarmaya <vdarmaya@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/04 18:07:32 by vdarmaya          #+#    #+#             */
-/*   Updated: 2020/01/04 18:07:32 by vdarmaya         ###   ########.fr       */
+/*   Updated: 2020/02/18 15:55:42 by vdarmaya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#define __USE_XOPEN_EXTENDED
-#include "/usr/include/stdlib.h"
 #include "ft_script.h"
 
 static void	help_exit(void)
@@ -61,17 +59,17 @@ static void	get_opt(int ac, char **av, t_script *script)
 
 static void	open_ptmx(t_script *script)
 {
-	char	*pts_name;
+	char	pts_name[128];
 
 	if (ioctl(0, TIOCGWINSZ, &(script->win)) != 0)
 		ft_exiterror("Can't get the window size", 1);
 	if ((script->fds[MASTER] = open("/dev/ptmx", O_RDWR)) < 0)
 		ft_exiterror("Can not open /dev/ptmx", 1);
-	if (grantpt(script->fds[MASTER]) < 0 /* ioctl(*master, TIOCPTYGRANT)*/)			// FORBIDEN
+	if (ioctl(script->fds[MASTER], TIOCPTYGRANT) < 0)
 		ft_exiterror("Can not grant pts", 1);
-	if (unlockpt(script->fds[MASTER]) < 0 /* ioctl(*master, TIOCPTYUNLK)*/)			// FORBIDEN
+	if (ioctl(script->fds[MASTER], TIOCPTYUNLK) < 0)
 		ft_exiterror("Can not unlock pts", 1);
-	if (!(pts_name = ptsname(script->fds[MASTER])) /* ioctl(*master, TIOCPTYGNAME, ptsname) */)	// FORBIDEN
+	if (ioctl(script->fds[MASTER], TIOCPTYGNAME, pts_name) < 0)
 		ft_exiterror("Can not get pts name", 1);
 	if ((script->fds[SLAVE] = open(pts_name, O_RDWR)) < 0)
 		ft_exiterror("Can not open slave fd", 1);
@@ -89,11 +87,12 @@ int			main(int ac, char **av, char **env)
 	script->cmd = NULL;
 	script->filename = "typescript";
 	script->ret_value = 0;
-	get_opt(ac, av, (void*)&script);
+	get_opt(ac, av, script);
 	if ((script->fds[FILE] = open(script->filename, (script->options & OPT_A) ?
-		OPEN_APPEND : OPEN_WRITE, OPEN_MODE)) == -1)
+		(O_WRONLY | O_CREAT | O_APPEND) : (O_WRONLY | O_CREAT | O_TRUNC),
+		(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH))) == -1)
 		ft_exiterror("Could not open log file", 1);
 	open_ptmx(script);
 	manage(script, env);
-	return script->ret_value;
+	return (script->ret_value);
 }

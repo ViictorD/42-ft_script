@@ -6,7 +6,7 @@
 /*   By: vdarmaya <vdarmaya@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/05/27 12:32:55 by bdurst            #+#    #+#             */
-/*   Updated: 2020/01/04 17:37:11 by vdarmaya         ###   ########.fr       */
+/*   Updated: 2020/02/18 15:01:19 by vdarmaya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,5 @@
 
 void	ft_fputstr(char const *s, int fd)
 {
-	int ret;
-
-	ret = write(fd, s, ft_strlen(s));
-	ret = ret;
+	write(fd, s, ft_strlen(s));
 }

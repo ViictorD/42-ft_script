@@ -6,7 +6,7 @@
 /*   By: vdarmaya <vdarmaya@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/06 18:24:56 by vdarmaya          #+#    #+#             */
-/*   Updated: 2020/01/28 20:47:40 by vdarmaya         ###   ########.fr       */
+/*   Updated: 2020/02/18 14:59:33 by vdarmaya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,11 @@ void	write_time(char start, t_script *script)
 	ft_fputstr(ctime(&(now.tv_sec)), script->fds[FILE]);
 }
 
-
 void	term_init(t_script *script)
 {
 	struct termios	term_old;
 
-	if (tcgetattr(0, &term_old) < 0/*ioctl(0, TIOCGETA, &term_old)*/)	// FORBIDEN
+	if (ioctl(0, TIOCGETA, &term_old) < 0)
 		ft_exiterror("Can't get termios struct", 1);
 	ft_memcpy(&script->term, &term_old, sizeof(struct termios));
 	term_old.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR |
@@ -64,11 +63,12 @@ void	term_init(t_script *script)
 	term_old.c_cflag |= CS8;
 	term_old.c_cc[VMIN] = 1;
 	term_old.c_cc[VTIME] = 0;
-	if (tcsetattr(0, TCSADRAIN, &term_old) < 0 /* ioctl(0, TIOCSETAW, &tmp) */)	// FORBIDEN
+	if (ioctl(0, TIOCSETAW, &term_old) < 0)
 		ft_exiterror("Can't set termios struct", 1);
 }
+
 void	restore_term(t_script *script)
 {
-	if (tcsetattr(0, TCSADRAIN, &script->term) < 0 /* ioctl(0, TIOCSETAW, &tmp) */)	// FORBIDEN
+	if (ioctl(0, TIOCSETAW, &script->term) < 0)
 		ft_exiterror("Can't set termios struct", 1);
 }
